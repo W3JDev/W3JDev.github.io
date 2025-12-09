@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Jewel's Job Search Command Center - Live Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        .stat-card .number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        .stat-card .label {
+            font-size: 1em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .main-content {
+            padding: 30px;
+        }
+        .section-title {
+            font-size: 1.8em;
+            margin: 30px 0 20px 0;
+            color: #333;
+            border-left: 5px solid #667eea;
+            padding-left: 15px;
+        }
+        .job-list {
+            display: grid;
+            gap: 15px;
+        }
+        .job-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .job-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .job-card.high-priority {
+            border-left: 5px solid #ff4444;
+        }
+        .job-card.medium-priority {
+            border-left: 5px solid #ffaa00;
+        }
+        .job-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .job-company {
+            font-size: 1.1em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .job-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .job-meta span {
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .job-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+        .last-updated {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .priority-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .priority-high {
+            background: #ffe0e0;
+            color: #ff4444;
+        }
+        .priority-medium {
+            background: #fff4e0;
+            color: #ffaa00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Job Search Command Center</h1>
+            <div class="subtitle">Jewel's AI Solutions Engineer Hunt - December 2025</div>
+            <div class="subtitle">Target: Secure job by January 6-13, 2026</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Total Jobs Found</div>
+                <div class="number" id="total-jobs">25</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">High Priority</div>
+                <div class="number" id="high-priority">16</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Applications Sent</div>
+                <div class="number" id="applications-sent">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Days Remaining</div>
+                <div class="number" id="days-remaining">30</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="section-title">📊 Progress Overview</div>
+            <div class="charts-section">
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="section-title">🔥 High Priority Jobs (Take Action TODAY)</div>
+            <div id="high-priority-jobs" class="job-list">
+                <!-- HIGH priority jobs will be loaded here -->
+            </div>
+
+            <div class="section-title">📋 All Job Opportunities</div>
+            <div id="all-jobs" class="job-list">
+                <!-- All jobs will be loaded here -->
+            </div>
+        </div>
+
+        <div class="last-updated" id="last-updated">
+            Last updated: <span id="update-time">Loading...</span>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="loadJobs()">🔄 Refresh Data</button>
+
+    <script>
+        const SHEET_ID = '1waZWVSdE4BUR5pBHs9CRp409EknbPr3H2cF-Ju3yDiQ';
+        const SHEET_NAME = '🎯 Job Applications Tracker';
+
+        // For demo - Replace with actual Google Sheets API call in production
+        // This would use: https://sheets.googleapis.com/v4/spreadsheets/{SHEET_ID}/values/{SHEET_NAME}
+
+        function loadJobs() {
+            document.getElementById('update-time').textContent = new Date().toLocaleString();
+
+            // Initialize charts
+            createCharts();
+
+            // Calculate deadline
+            const targetDate = new Date('2026-01-06');
+            const today = new Date();
+            const daysRemaining = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+            document.getElementById('days-remaining').textContent = daysRemaining;
+
+            alert('Dashboard loaded! To enable real-time data sync, connect Google Sheets API with your credentials.');
+        }
+
+        function createCharts() {
+            // Status Chart
+            const statusCtx = document.getElementById('statusChart');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['To Apply', 'Applied', 'Interview', 'Rejected', 'Offer'],
+                    datasets: [{
+                        data: [25, 0, 0, 0, 0],
+                        backgroundColor: ['#667eea', '#4CAF50', '#FFC107', '#FF5722', '#2196F3']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'Application Status' }
+                    }
+                }
+            });
+
+            // Priority Chart
+            const priorityCtx = document.getElementById('priorityChart');
+            new Chart(priorityCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['High Priority', 'Medium Priority'],
+                    datasets: [{
+                        label: 'Jobs by Priority',
+                        data: [16, 9],
+                        backgroundColor: ['#ff4444', '#ffaa00']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'Job Priority Distribution' }
+                    }
+                }
+            });
+        }
+
+        // Load on page load
+        window.onload = loadJobs;
+    </script>
+</body>
+</html>
